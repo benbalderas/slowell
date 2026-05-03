@@ -31,6 +31,14 @@ export const editCollectionItemInput = z.object({
 });
 export type EditCollectionItemInput = z.infer<typeof editCollectionItemInput>;
 
+// Update profile fields (owner-only). Handle editing lives in Phase 6.
+export const updateProfileInput = z.object({
+  displayName: trimmedOpt(60),
+  bio: trimmedOpt(500),
+  image: trimmedOpt(500),
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileInput>;
+
 // Edit a manual Pressing's metadata (only allowed for MANUAL-source pressings).
 export const editManualPressingInput = z.object({
   title: trimmed(200),

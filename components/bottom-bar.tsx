@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IconBack } from "@/components/icons";
 
 interface BottomBarProps {
   back?: { href: string } | null;
@@ -18,14 +19,14 @@ export function BottomBar({ back, middle, primary }: BottomBarProps) {
       className="fixed bottom-0 inset-x-0 px-4 pb-4 pointer-events-none"
       style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
     >
-      <div className="max-w-2xl mx-auto flex gap-2 pointer-events-auto">
+      <div className="max-w-[732px] mx-auto flex gap-2 pointer-events-auto">
         {back ? (
           <Link
             href={back.href}
             aria-label="back"
-            className="h-[52px] w-[52px] flex items-center justify-center rounded-lg bg-surface-raised text-ink-secondary font-bit text-lg active:scale-[0.97] transition-transform duration-[120ms]"
+            className="h-[52px] w-[52px] flex items-center justify-center rounded-lg bg-surface-deep text-ink-secondary active:scale-[0.97] transition-transform duration-[120ms]"
           >
-            ←
+            <IconBack />
           </Link>
         ) : null}
 
@@ -33,12 +34,12 @@ export function BottomBar({ back, middle, primary }: BottomBarProps) {
           middle.href ? (
             <Link
               href={middle.href}
-              className="h-[52px] min-w-[80px] flex-1 flex items-center justify-center px-4 rounded-lg bg-surface-raised text-ink font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+              className="h-[52px] min-w-[80px] flex-1 flex items-center justify-center px-4 rounded-lg bg-surface-deep text-ink font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
             >
               {middle.label}
             </Link>
           ) : (
-            <div className="h-[52px] min-w-[80px] flex-1 flex items-center justify-center px-4 rounded-lg bg-surface-raised text-ink font-medium lowercase">
+            <div className="h-[52px] min-w-[80px] flex-1 flex items-center justify-center px-4 rounded-lg bg-surface-deep text-ink font-medium lowercase">
               {middle.label}
             </div>
           )

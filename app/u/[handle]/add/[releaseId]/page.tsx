@@ -1,15 +1,23 @@
 import { notFound } from "next/navigation";
 
 import { addFromDiscogs } from "@/lib/collection";
-import { getRelease, joinArtists, parseTitle, pickFormatFromRelease, pickPrimaryImage, pickVariant } from "@/lib/discogs";
+import {
+  getRelease,
+  joinArtists,
+  parseTitle,
+  pickFormatFromRelease,
+  pickPrimaryImage,
+  pickVariant,
+} from "@/lib/discogs";
 import { BottomBar } from "@/components/bottom-bar";
 
 interface Props {
-  params: Promise<{ releaseId: string }>;
+  params: Promise<{ handle: string; releaseId: string }>;
 }
 
 export default async function ReleaseDetailPage({ params }: Props) {
-  const { releaseId } = await params;
+  const { handle, releaseId } = await params;
+
   let release;
   try {
     release = await getRelease(releaseId);
@@ -20,14 +28,17 @@ export default async function ReleaseDetailPage({ params }: Props) {
   const format = pickFormatFromRelease(release);
   const cover = pickPrimaryImage(release);
   const { artist, title } = release.artists?.length
-    ? { artist: joinArtists(release.artists), title: release.title.replace(/^.*\s-\s/, "") }
+    ? {
+        artist: joinArtists(release.artists),
+        title: release.title.replace(/^.*\s-\s/, ""),
+      }
     : parseTitle(release.title);
   const label = release.labels?.[0];
   const variant = pickVariant(release);
 
   return (
     <>
-      <div className="px-4 pt-8 pb-4">
+      <div className="pt-8 pb-4">
         <div className="aspect-square w-full max-w-md mx-auto rounded-sm bg-surface-deep overflow-hidden">
           {cover ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -36,15 +47,24 @@ export default async function ReleaseDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="px-4 space-y-4 max-w-md mx-auto">
+      <div className="space-y-4 max-w-md mx-auto">
         <div>
           <h1 className="text-xl">{title}</h1>
           <p className="text-base text-ink-secondary">{artist}</p>
         </div>
 
         <dl className="text-sm space-y-2">
-          {release.year ? <Row label="year" value={String(release.year)} /> : null}
-          {format ? <Row label="format" value={format.toLowerCase()} /> : (
+          {release.year ? (
+            <Row
+              label="year"
+              value={
+                <span className="font-bit text-base">{release.year}</span>
+              }
+            />
+          ) : null}
+          {format ? (
+            <Row label="format" value={format.toLowerCase()} />
+          ) : (
             <Row label="format" value="not supported (cd / vinyl only in v1)" />
           )}
           {label?.name ? <Row label="label" value={label.name} /> : null}
@@ -65,7 +85,7 @@ export default async function ReleaseDetailPage({ params }: Props) {
       </div>
 
       <BottomBar
-        back={{ href: "/me/add" }}
+        back={{ href: `/u/${handle}/add` }}
         middle={null}
         primary={
           format
@@ -77,7 +97,7 @@ export default async function ReleaseDetailPage({ params }: Props) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-2 border-b border-surface-deep">
       <dt className="text-ink-secondary lowercase">{label}</dt>

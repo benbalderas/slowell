@@ -5,9 +5,11 @@ import { BottomBar } from "@/components/bottom-bar";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
+  params: Promise<{ handle: string }>;
 }
 
-export default async function AddSearchPage({ searchParams }: Props) {
+export default async function AddSearchPage({ searchParams, params }: Props) {
+  const { handle } = await params;
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
@@ -23,14 +25,14 @@ export default async function AddSearchPage({ searchParams }: Props) {
 
   return (
     <>
-      <header className="px-4 pt-8 pb-4 space-y-2">
+      <header className="pt-8 pb-4 space-y-2">
         <h1 className="text-xl">add an album</h1>
         <p className="text-sm text-ink-secondary">
           search discogs by title, artist, or both. typos are fine.
         </p>
       </header>
 
-      <form action="/me/add" method="GET" className="px-4 pb-4 flex gap-2">
+      <form action={`/u/${handle}/add`} method="GET" className="pb-4 flex gap-2">
         <input
           name="q"
           type="search"
@@ -47,9 +49,9 @@ export default async function AddSearchPage({ searchParams }: Props) {
         </button>
       </form>
 
-      <div className="px-4 pb-4">
+      <div className="pb-4">
         <Link
-          href="/me/add/manual"
+          href={`/u/${handle}/add/manual`}
           className="text-sm text-ink-secondary underline underline-offset-4"
         >
           can&apos;t find it? add manually
@@ -57,27 +59,33 @@ export default async function AddSearchPage({ searchParams }: Props) {
       </div>
 
       {searchError ? (
-        <div className="px-4 py-6 text-sm text-ink-secondary">
+        <div className="py-6 text-sm text-ink-secondary">
           discogs is unreachable right now. try{" "}
-          <Link href="/me/add/manual" className="underline underline-offset-4">
+          <Link
+            href={`/u/${handle}/add/manual`}
+            className="underline underline-offset-4"
+          >
             adding manually
           </Link>
           .
         </div>
       ) : query && results.length === 0 ? (
-        <div className="px-4 py-6 text-sm text-ink-secondary">
+        <div className="py-6 text-sm text-ink-secondary">
           no matches for &ldquo;{query}&rdquo;.{" "}
-          <Link href="/me/add/manual" className="underline underline-offset-4">
+          <Link
+            href={`/u/${handle}/add/manual`}
+            className="underline underline-offset-4"
+          >
             add manually
           </Link>
           .
         </div>
       ) : (
-        <ul className="px-4 space-y-2">
+        <ul className="space-y-2">
           {results.map((r) => (
             <li key={r.id}>
               <Link
-                href={`/me/add/master/${r.id}`}
+                href={`/u/${handle}/add/master/${r.id}`}
                 className="flex gap-3 p-2 rounded-md bg-surface-raised active:scale-[0.99] transition-transform duration-[120ms]"
               >
                 <div className="w-16 h-16 rounded-sm bg-surface-deep overflow-hidden flex-shrink-0">
@@ -103,7 +111,7 @@ export default async function AddSearchPage({ searchParams }: Props) {
         </ul>
       )}
 
-      <BottomBar back={{ href: "/me" }} middle={null} primary={null} />
+      <BottomBar back={{ href: `/u/${handle}` }} middle={null} primary={null} />
     </>
   );
 }
