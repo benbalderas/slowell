@@ -28,14 +28,20 @@ interface ItemViewModel {
   };
 }
 
-export function ItemDetail({ item }: { item: ItemViewModel }) {
+interface Props {
+  handle: string;
+  isOwner: boolean;
+  item: ItemViewModel;
+}
+
+export function ItemDetail({ handle, isOwner, item }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Editable fields
+  // Editable fields (used only when isOwner + editing)
   const [notes, setNotes] = useState(item.notes ?? "");
   const [customCoverUrl, setCustomCoverUrl] = useState(item.customCoverUrl ?? "");
   const [acquiredAt, setAcquiredAt] = useState(
@@ -100,7 +106,7 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
 
   return (
     <>
-      <div className="px-4 pt-8 pb-4">
+      <div className="pt-8 pb-4">
         <div className="aspect-square w-full max-w-md mx-auto rounded-sm bg-surface-deep overflow-hidden">
           {cover ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -109,32 +115,54 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
         </div>
       </div>
 
-      <div className="px-4 space-y-4 max-w-md mx-auto">
+      <div className="space-y-4 max-w-md mx-auto">
         {!editing ? (
           <>
             <div>
               <h1 className="text-xl">{item.pressing.album.title}</h1>
-              <p className="text-base text-ink-secondary">{item.pressing.album.artist}</p>
+              <p className="text-base text-ink-secondary">
+                {item.pressing.album.artist}
+              </p>
             </div>
             <dl className="text-sm space-y-2">
               <Row label="format" value={item.pressing.format.toLowerCase()} />
-              {item.pressing.year ? <Row label="year" value={String(item.pressing.year)} /> : null}
-              {item.pressing.label ? <Row label="label" value={item.pressing.label} /> : null}
-              {item.pressing.catalogNumber ? <Row label="catalog #" value={item.pressing.catalogNumber} /> : null}
-              {item.pressing.country ? <Row label="country" value={item.pressing.country} /> : null}
-              {item.pressing.variant ? <Row label="variant" value={item.pressing.variant} /> : null}
-              {item.acquiredAt ? (
+              {item.pressing.year ? (
+                <Row
+                  label="year"
+                  value={
+                    <span className="font-bit text-base">
+                      {item.pressing.year}
+                    </span>
+                  }
+                />
+              ) : null}
+              {item.pressing.label ? (
+                <Row label="label" value={item.pressing.label} />
+              ) : null}
+              {item.pressing.catalogNumber ? (
+                <Row label="catalog #" value={item.pressing.catalogNumber} />
+              ) : null}
+              {item.pressing.country ? (
+                <Row label="country" value={item.pressing.country} />
+              ) : null}
+              {item.pressing.variant ? (
+                <Row label="variant" value={item.pressing.variant} />
+              ) : null}
+              {isOwner && item.acquiredAt ? (
                 <Row
                   label="acquired"
-                  value={new Date(item.acquiredAt).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  value={new Date(item.acquiredAt).toLocaleDateString(
+                    undefined,
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    },
+                  )}
                 />
               ) : null}
             </dl>
-            {item.notes ? (
+            {isOwner && item.notes ? (
               <div className="pt-2">
                 <p className="text-xs text-ink-secondary mb-1">notes</p>
                 <p className="text-sm whitespace-pre-wrap">{item.notes}</p>
@@ -149,10 +177,18 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
             {isManual ? (
               <>
                 <Field label="title" required>
-                  <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="artist" required>
-                  <input value={artist} onChange={(e) => setArtist(e.target.value)} className={inputCls} />
+                  <input
+                    value={artist}
+                    onChange={(e) => setArtist(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="format">
                   <div className="flex gap-2">
@@ -162,7 +198,9 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
                         type="button"
                         onClick={() => setFormat(f)}
                         className={`flex-1 h-[52px] rounded-md font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms] ${
-                          format === f ? "bg-accent text-accent-text" : "bg-surface-raised text-ink-secondary"
+                          format === f
+                            ? "bg-accent text-accent-text"
+                            : "bg-surface-deep text-ink-secondary"
                         }`}
                       >
                         {f.toLowerCase()}
@@ -171,31 +209,64 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
                   </div>
                 </Field>
                 <Field label="year">
-                  <input type="number" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value)} className={inputCls} />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="label">
-                  <input value={label} onChange={(e) => setLabel(e.target.value)} className={inputCls} />
+                  <input
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="country">
-                  <input value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls} />
+                  <input
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="catalog #">
-                  <input value={catalogNumber} onChange={(e) => setCatalogNumber(e.target.value)} className={inputCls} />
+                  <input
+                    value={catalogNumber}
+                    onChange={(e) => setCatalogNumber(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="variant">
-                  <input value={variant} onChange={(e) => setVariant(e.target.value)} className={inputCls} />
+                  <input
+                    value={variant}
+                    onChange={(e) => setVariant(e.target.value)}
+                    className={inputCls}
+                  />
                 </Field>
               </>
             ) : (
               <p className="text-xs text-ink-secondary">
-                discogs metadata is read-only — only your notes / cover / acquired date are editable.
+                discogs metadata is read-only — only your notes / cover / acquired
+                date are editable.
               </p>
             )}
             <Field label="notes">
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${inputCls} h-auto py-3`} />
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                className={`${inputCls} h-auto py-3`}
+              />
             </Field>
             <Field label="acquired">
-              <input type="date" value={acquiredAt} onChange={(e) => setAcquiredAt(e.target.value)} className={inputCls} />
+              <input
+                type="date"
+                value={acquiredAt}
+                onChange={(e) => setAcquiredAt(e.target.value)}
+                className={inputCls}
+              />
             </Field>
             <Field label="custom cover url">
               <input
@@ -210,32 +281,32 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        {!editing && !confirmingDelete ? (
+        {isOwner && !editing && !confirmingDelete ? (
           <div className="space-y-2 pt-4">
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="w-full h-[52px] rounded-lg bg-surface-raised text-ink font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+              className="w-full h-[52px] rounded-lg bg-surface-deep text-ink font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
             >
               edit
             </button>
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="w-full h-[52px] rounded-lg bg-surface text-destructive font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+              className="w-full h-[52px] rounded-lg bg-surface-deep text-destructive font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
             >
               remove from collection
             </button>
           </div>
         ) : null}
 
-        {editing ? (
+        {isOwner && editing ? (
           <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => setEditing(false)}
               disabled={pending}
-              className="flex-1 h-[52px] rounded-lg bg-surface text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+              className="flex-1 h-[52px] rounded-lg bg-surface-deep text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
             >
               cancel
             </button>
@@ -279,7 +350,7 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
                 type="button"
                 onClick={() => setConfirmingDelete(false)}
                 disabled={pending}
-                className="w-full h-[52px] rounded-lg bg-surface text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+                className="w-full h-[52px] rounded-lg bg-surface-deep text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
               >
                 cancel
               </button>
@@ -288,12 +359,16 @@ export function ItemDetail({ item }: { item: ItemViewModel }) {
         </div>
       ) : null}
 
-      <BottomBar back={{ href: "/me" }} middle={null} primary={null} />
+      <BottomBar
+        back={{ href: `/u/${handle}` }}
+        middle={null}
+        primary={null}
+      />
     </>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-2 border-b border-surface-deep">
       <dt className="text-ink-secondary lowercase">{label}</dt>

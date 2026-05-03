@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { addManual, type ManualAddResult } from "@/lib/collection";
 import { BottomBar } from "@/components/bottom-bar";
@@ -34,6 +34,8 @@ const empty: FormState = {
 };
 
 export default function ManualAddPage() {
+  const params = useParams<{ handle: string }>();
+  const handle = params.handle;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [form, setForm] = useState<FormState>(empty);
@@ -69,7 +71,7 @@ export default function ManualAddPage() {
         if (result.status === "suggestion") {
           setSuggestion(result.match);
         } else {
-          router.push("/me");
+          router.push(`/u/${handle}`);
           router.refresh();
         }
       } catch (e) {
@@ -80,7 +82,7 @@ export default function ManualAddPage() {
 
   return (
     <>
-      <header className="px-4 pt-8 pb-4 space-y-2">
+      <header className="pt-8 pb-4 space-y-2">
         <h1 className="text-xl">add manually</h1>
         <p className="text-sm text-ink-secondary">
           for pressings discogs doesn&apos;t have, or details you want to control.
@@ -89,7 +91,7 @@ export default function ManualAddPage() {
 
       <form
         id="manual-form"
-        className="px-4 pb-4 space-y-4 max-w-md mx-auto"
+        className="pb-4 space-y-4 max-w-md mx-auto"
         onSubmit={(e) => {
           e.preventDefault();
           submit(false);
@@ -121,7 +123,7 @@ export default function ManualAddPage() {
                 className={`flex-1 h-[52px] rounded-md font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms] ${
                   form.format === f
                     ? "bg-accent text-accent-text"
-                    : "bg-surface-raised text-ink-secondary"
+                    : "bg-surface-deep text-ink-secondary"
                 }`}
               >
                 {f.toLowerCase()}
@@ -185,15 +187,15 @@ export default function ManualAddPage() {
         </Field>
       </form>
 
-      {error ? (
-        <p className="px-4 text-sm text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {suggestion ? (
         <SuggestionModal
           match={suggestion}
           pending={pending}
-          onUseDiscogs={() => router.push(`/me/add/master/${suggestion.id}`)}
+          onUseDiscogs={() =>
+            router.push(`/u/${handle}/add/master/${suggestion.id}`)
+          }
           onKeepManual={() => {
             setSuggestion(null);
             submit(true);
@@ -203,7 +205,7 @@ export default function ManualAddPage() {
       ) : null}
 
       <BottomBar
-        back={{ href: "/me/add" }}
+        back={{ href: `/u/${handle}/add` }}
         middle={null}
         primary={{
           label: pending ? "saving…" : "save",
@@ -213,8 +215,12 @@ export default function ManualAddPage() {
       />
 
       <noscript>
-        <p className="px-4 text-sm text-ink-secondary">
-          this form needs javascript. <Link href="/me/add" className="underline">go back</Link>.
+        <p className="text-sm text-ink-secondary">
+          this form needs javascript.{" "}
+          <Link href={`/u/${handle}/add`} className="underline">
+            go back
+          </Link>
+          .
         </p>
       </noscript>
     </>
@@ -272,13 +278,19 @@ function SuggestionModal({
           <div className="w-16 h-16 rounded-sm bg-surface-deep overflow-hidden flex-shrink-0">
             {match.thumb ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={match.thumb} alt="" className="w-full h-full object-cover" />
+              <img
+                src={match.thumb}
+                alt=""
+                className="w-full h-full object-cover"
+              />
             ) : null}
           </div>
           <div className="min-w-0">
             <p className="text-base text-ink truncate">{match.title}</p>
             {match.year ? (
-              <p className="text-sm text-ink-secondary tabular-nums">{match.year}</p>
+              <p className="text-sm text-ink-secondary tabular-nums">
+                {match.year}
+              </p>
             ) : null}
           </div>
         </div>
@@ -295,7 +307,7 @@ function SuggestionModal({
             type="button"
             onClick={onKeepManual}
             disabled={pending}
-            className="w-full h-[52px] rounded-lg bg-surface text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
+            className="w-full h-[52px] rounded-lg bg-surface-deep text-ink-secondary font-medium lowercase active:scale-[0.97] transition-transform duration-[120ms]"
           >
             {pending ? "saving…" : "keep my entry"}
           </button>

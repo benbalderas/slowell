@@ -118,8 +118,15 @@ export async function addFromDiscogs(formData: FormData) {
     data: { userId, pressingId: pressing.id },
   });
 
-  revalidatePath("/me");
-  redirect("/me");
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true },
+  });
+  if (user?.handle) {
+    revalidatePath(`/u/${user.handle}`);
+    redirect(`/u/${user.handle}`);
+  }
+  redirect("/sign-in");
 }
 
 async function ensureAlbumAndPressingFromDiscogs(
@@ -238,7 +245,11 @@ export async function addManual(
     select: { id: true },
   });
 
-  revalidatePath("/me");
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true },
+  });
+  if (user?.handle) revalidatePath(`/u/${user.handle}`);
   return { status: "created", itemId: item.id };
 }
 
@@ -295,8 +306,14 @@ export async function updateCollectionItem(
       acquiredAt: parsed.acquiredAt ?? null,
     },
   });
-  revalidatePath("/me");
-  revalidatePath(`/me/${itemId}`);
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true },
+  });
+  if (user?.handle) {
+    revalidatePath(`/u/${user.handle}`);
+    revalidatePath(`/u/${user.handle}/${itemId}`);
+  }
 }
 
 export async function updateManualPressing(
@@ -334,8 +351,14 @@ export async function updateManualPressing(
       variant: parsed.variant,
     },
   });
-  revalidatePath("/me");
-  revalidatePath(`/me/${itemId}`);
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true },
+  });
+  if (user?.handle) {
+    revalidatePath(`/u/${user.handle}`);
+    revalidatePath(`/u/${user.handle}/${itemId}`);
+  }
 }
 
 export async function deleteCollectionItem(itemId: string) {
@@ -343,6 +366,13 @@ export async function deleteCollectionItem(itemId: string) {
   await prisma.collectionItem.delete({
     where: { id: itemId, userId } as Prisma.CollectionItemWhereUniqueInput,
   });
-  revalidatePath("/me");
-  redirect("/me");
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true },
+  });
+  if (user?.handle) {
+    revalidatePath(`/u/${user.handle}`);
+    redirect(`/u/${user.handle}`);
+  }
+  redirect("/sign-in");
 }
